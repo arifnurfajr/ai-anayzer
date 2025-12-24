@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Assist Trade — AI Technical Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-primary: #0a0f1d;
+      --bg-secondary: #111827;
+      --bg-tertiary: #0f172a;
+      --border: #1f2937;
+      --border-light: #334155;
+      --text-primary: #e5e7eb;
+      --text-secondary: #94a3b8;
+      --accent-primary: #4f46e5;
+      --accent-secondary: #06b6d4;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo i {
+      font-size: 28px;
+      color: var(--accent-primary);
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 20px;
+      font-size: 14px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .card h2 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h2 i {
+      color: var(--accent-secondary);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .label-with-hint {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hint-icon {
+      color: var(--text-secondary);
+      cursor: help;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .upload-area {
+      border: 2px dashed var(--border-light);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: var(--bg-tertiary);
+    }
+
+    .upload-area:hover {
+      border-color: var(--accent-primary);
+      background: rgba(79, 70, 229, 0.05);
+    }
+
+    .upload-area.active {
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .upload-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .upload-icon {
+      font-size: 40px;
+      color: var(--accent-secondary);
+    }
+
+    .upload-text strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .upload-hint {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .preview-container {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+    }
+
+    .preview-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .preview-info {
+      flex: 1;
+    }
+
+    .preview-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .preview-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 12px;
+    }
+
+    .preview-remove {
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .button-primary {
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      color: white;
+    }
+
+    .button-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .button-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .button-secondary:hover:not(:disabled) {
+      background: var(--border-light);
+    }
+
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .button-loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .button-loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border: 2px solid white;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .action-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 20px;
+      animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .badge-buy {
+      background: linear-gradient(90deg, #065f46, #10b981);
+      color: #bbf7d0;
+    }
+
+    .badge-sell {
+      background: linear-gradient(90deg, #7f1d1d, #ef4444);
+      color: #fecaca;
+    }
+
+    .badge-hold {
+      background: linear-gradient(90deg, #1e293b, #334155);
+      color: #cbd5e1;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .result-card {
+      background: var(--bg-tertiary);
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent-secondary);
+    }
+
+    .result-card h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .result-content {
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .result-content strong {
+      color: var(--accent-secondary);
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 20px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      animation: slideIn 0.3s;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast-success {
+      border-left: 4px solid var(--success);
+    }
+
+    .toast-error {
+      border-left: 4px solid var(--danger);
+    }
+
+    .toast-icon {
+      font-size: 20px;
+    }
+
+    .history-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .history-pair {
+      font-weight: 600;
+    }
+
+    .history-decision {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <h1>Assist Trade</h1>
+      </div>
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span>AI Trading Assistant Ready</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- Left Panel - Controls -->
+      <div>
+        <!-- Settings Card -->
+        <div class="card">
+          <h2><i class="fas fa-sliders-h"></i> Trading Settings</h2>
+          
+          <div class="form-group">
+            <div class="label-with-hint">
+              <label for="symbol">Trading Pair</label>
+              <span class="hint-icon" title="Pilih pasangan trading yang sesuai dengan chart Anda">
+                <i class="fas fa-info-circle"></i>
+              </span>
+            </div>
+            <select id="symbol">
+              <option value="XAUUSD">XAUUSD (Gold)</option>
+              <option value="EURUSD">EURUSD</option>
+              <option value="BTCUSD">BTCUSD (Bitcoin)</option>
+              <option value="GBPUSD">GBPUSD</option>
+              <option value="USDJPY">USDJPY</option>
+              <option value="ETHUSD">ETHUSD (Ethereum)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="label-with-hint">
+              <label for="timeframe">Timeframe</label>
+              <span class="hint-icon" title="Timeframe chart yang Anda screenshot">
+                <i class="fas fa-info-circle"></i>
+              </span>
+            </div>
+            <select id="timeframe">
+              <option value="M1">M1 (1 Minute)</option>
+              <option value="M5" selected>M5 (5 Minutes)</option>
+              <option value="M15">M15 (15 Minutes)</option>
+              <option value="H1">H1 (1 Hour)</option>
+              <option value="H4">H4 (4 Hours)</option>
+              <option value="D1">D1 (Daily)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="label-with-hint">
+              <label for="tradeType">Trading Style</label>
+              <span class="hint-icon" title="Strategi trading yang Anda gunakan">
+                <i class="fas fa-info-circle"></i>
+              </span>
+            </div>
+            <select id="tradeType">
+              <option value="scalping" selected>Scalping (Quick Trades)</option>
+              <option value="intraday">Intraday (Day Trading)</option>
+              <option value="swing">Swing (Multi-day)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="label-with-hint">
+              <label for="extraNotes">Additional Context (Opsional)</label>
+              <span class="hint-icon" title="Tambahan informasi seperti news, session, atau kondisi market">
+                <i class="fas fa-info-circle"></i>
+              </span>
+            </div>
+            <textarea id="extraNotes" placeholder="Contoh: Sesi London, menjelang news NFP, hanya ikut trend mayor, atau kondisi khusus lainnya..."></textarea>
+          </div>
+
+          <button id="testApiBtn" class="button button-secondary">
+            <i class="fas fa-server"></i> Test Server Connection
+          </button>
+          <div id="testStatus" class="upload-hint" style="margin-top: 8px;"></div>
+        </div>
+
+        <!-- Upload Card -->
+        <div class="card" style="margin-top: 20px;">
+          <h2><i class="fas fa-cloud-upload-alt"></i> Upload Chart Screenshot</h2>
+          
+          <div class="upload-area" id="uploadArea">
+            <div class="upload-content">
+              <i class="fas fa-file-upload upload-icon"></i>
+              <div class="upload-text">
+                <strong>Klik atau Drop Screenshot di sini</strong>
+                <div class="upload-hint">
+                  Format: PNG, JPG, JPEG<br>
+                  <small>Ctrl+V untuk paste</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="fileInput" class="hidden" accept="image/*" />
+          
+          <div id="previewContainer" class="preview-container hidden">
+            <img id="previewImg" class="preview-image" />
+            <div class="preview-info">
+              <div id="previewName" class="preview-name"></div>
+              <div class="preview-meta">
+                <span id="previewSize"></span>
+                <span id="previewDimensions"></span>
+              </div>
+            </div>
+            <button id="removePreview" class="preview-remove" title="Hapus gambar">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <button id="analyzeBtn" class="button button-primary" style="margin-top: 20px;">
+            <i class="fas fa-brain"></i> Analyze Chart
+          </button>
+          
+          <div class="upload-hint" style="margin-top: 8px; text-align: center;">
+            <i class="fas fa-lightbulb"></i> Upload gambar terlebih dahulu, lalu klik Analyze
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Results -->
+      <div>
+        <!-- Analysis Results Card -->
+        <div class="card">
+          <h2><i class="fas fa-chart-bar"></i> Technical Analysis Results</h2>
+          
+          <div id="actionBadge" class="action-badge hidden">
+            <i class="fas fa-bullhorn"></i>
+            <span>HOLD</span>
+          </div>
+          
+          <div class="results-grid">
+            <div class="result-card">
+              <h3><i class="fas fa-wave-square"></i> Trend Structure</h3>
+              <div id="trendBox" class="result-content">-</div>
+            </div>
+            
+            <div class="result-card">
+              <h3><i class="fas fa-arrows-alt-h"></i> Support & Resistance</h3>
+              <div id="srBox" class="result-content">-</div>
+            </div>
+            
+            <div class="result-card">
+              <h3><i class="fas fa-tachometer-alt"></i> RSI Analysis</h3>
+              <div id="rsiBox" class="result-content">-</div>
+            </div>
+            
+            <div class="result-card">
+              <h3><i class="fas fa-exchange-alt"></i> MACD Signal</h3>
+              <div id="macdBox" class="result-content">-</div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <h3><i class="fas fa-sticky-note"></i> Market Observations</h3>
+            <div id="notesBox" class="result-content" style="padding: 12px; background: var(--bg-tertiary); border-radius: 6px;">-</div>
+          </div>
+        </div>
+
+        <!-- Trading Decision Card -->
+        <div class="card" style="margin-top: 20px;">
+          <h2><i class="fas fa-trade-federated"></i> Trading Decision</h2>
+          
+          <div class="form-group">
+            <h3><i class="fas fa-info-circle"></i> Analysis Reasoning</h3>
+            <div id="decisionBox" class="result-content" style="padding: 12px; background: var(--bg-tertiary); border-radius: 6px; white-space: pre-wrap;">-</div>
+          </div>
+          
+          <div class="form-group">
+            <h3><i class="fas fa-target"></i> Entry & Exit Points</h3>
+            <div class="results-grid">
+              <div class="result-card">
+                <h3>Entry Price</h3>
+                <div id="entryPrice" class="result-content" style="font-size: 18px; font-weight: bold;">-</div>
+              </div>
+              <div class="result-card">
+                <h3>Stop Loss</h3>
+                <div id="stopLoss" class="result-content" style="color: var(--danger); font-weight: bold;">-</div>
+              </div>
+              <div class="result-card">
+                <h3>Take Profit 1</h3>
+                <div id="takeProfit1" class="result-content" style="color: var(--success); font-weight: bold;">-</div>
+              </div>
+              <div class="result-card">
+                <h3>Take Profit 2</h3>
+                <div id="takeProfit2" class="result-content" style="color: var(--success); font-weight: bold;">-</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <h3><i class="fas fa-shield-alt"></i> Risk Assessment</h3>
+            <div id="riskBox" class="result-content" style="padding: 12px; background: var(--bg-tertiary); border-radius: 6px;">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Section -->
+    <div class="history-section">
+      <h3><i class="fas fa-history"></i> Analysis History</h3>
+      <div id="historyList" class="history-list">
+        <div class="history-item">
+          <span class="history-pair">No analysis history yet</span>
+          <span class="history-decision" style="background: var(--bg-tertiary);">-</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 15, 29, 0.9); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div style="text-align: center;">
+        <h3>Analyzing Chart with AI...</h3>
+        <p>Processing your trading chart. Please wait.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const previewContainer = document.getElementById("previewContainer");
+    const previewImg = document.getElementById("previewImg");
+    const previewName = document.getElementById("previewName");
+    const previewSize = document.getElementById("previewSize");
+    const previewDimensions = document.getElementById("previewDimensions");
+    const removePreview = document.getElementById("removePreview");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    
+    const symbolEl = document.getElementById("symbol");
+    const timeframeEl = document.getElementById("timeframe");
+    const tradeTypeEl = document.getElementById("tradeType");
+    const extraNotesEl = document.getElementById("extraNotes");
+    
+    const actionBadge = document.getElementById("actionBadge");
+    const trendBox = document.getElementById("trendBox");
+    const srBox = document.getElementById("srBox");
+    const rsiBox = document.getElementById("rsiBox");
+    const macdBox = document.getElementById("macdBox");
+    const notesBox = document.getElementById("notesBox");
+    const decisionBox = document.getElementById("decisionBox");
+    const entryPrice = document.getElementById("entryPrice");
+    const stopLoss = document.getElementById("stopLoss");
+    const takeProfit1 = document.getElementById("takeProfit1");
+    const takeProfit2 = document.getElementById("takeProfit2");
+    const riskBox = document.getElementById("riskBox");
+    
+    const testApiBtn = document.getElementById("testApiBtn");
+    const testStatus = document.getElementById("testStatus");
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    const historyList = document.getElementById("historyList");
+
+    let selectedFile = null;
+    let analysisHistory = [];
+
+    // Initialize
+    function init() {
+      loadHistory();
+      resetOutputs();
+    }
+
+    // File Handling - TIDAK AUTO ANALYZE
+    function handleFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('Please select an image file (PNG, JPG, JPEG)', 'error');
+        return;
+      }
+
+      selectedFile = file;
+      uploadArea.classList.add('active');
+      previewContainer.classList.remove('hidden');
+      
+      const reader = new FileReader();
+      reader.onload = e => {
+        previewImg.src = e.target.result;
+        
+        // Get image dimensions
+        const img = new Image();
+        img.onload = function() {
+          previewDimensions.textContent = `${this.width} × ${this.height} px`;
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      
+      previewName.textContent = file.name || "Pasted Image";
+      previewSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+      
+      // Tampilkan toast bahwa gambar berhasil diupload
+      showToast('Chart image uploaded successfully! Click "Analyze Chart" to proceed.', 'success');
+    }
+
+    function resetPreview() {
+      selectedFile = null;
+      uploadArea.classList.remove('active');
+      previewContainer.classList.add('hidden');
+      previewImg.src = '';
+      previewName.textContent = '';
+      previewSize.textContent = '';
+      previewDimensions.textContent = '';
+    }
+
+    // Upload Area Events
+    uploadArea.onclick = () => fileInput.click();
+    fileInput.onchange = e => handleFile(e.target.files[0]);
+
+    uploadArea.ondragover = e => {
+      e.preventDefault();
+      uploadArea.classList.add('active');
+    };
+
+    uploadArea.ondragleave = () => {
+      uploadArea.classList.remove('active');
+    };
+
+    uploadArea.ondrop = e => {
+      e.preventDefault();
+      uploadArea.classList.remove('active');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    };
+
+    // Paste from clipboard - TIDAK AUTO ANALYZE
+    document.addEventListener("paste", function (event) {
+      const items = (event.clipboardData || window.clipboardData)?.items;
+      if (!items) return;
+
+      for (let item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          const blob = item.getAsFile();
+          handleFile(blob);
+          event.preventDefault();
+          break;
+        }
+      }
+    });
+
+    // Remove preview
+    removePreview.onclick = resetPreview;
+
+    // Reset outputs
+    function resetOutputs() {
+      trendBox.textContent = "-";
+      srBox.textContent = "-";
+      rsiBox.textContent = "-";
+      macdBox.textContent = "-";
+      notesBox.textContent = "-";
+      decisionBox.textContent = "-";
+      entryPrice.textContent = "-";
+      stopLoss.textContent = "-";
+      takeProfit1.textContent = "-";
+      takeProfit2.textContent = "-";
+      riskBox.textContent = "-";
+      
+      actionBadge.classList.remove("badge-buy", "badge-sell", "badge-hold");
+      actionBadge.classList.add("hidden");
+    }
+
+    // Perform analysis - HANYA ketika tombol ditekan
+    async function performAnalysis() {
+      if (!selectedFile) {
+        showToast('Please upload or paste a chart screenshot first', 'error');
+        return;
+      }
+
+      loadingOverlay.classList.remove('hidden');
+      analyzeBtn.classList.add('button-loading');
+      analyzeBtn.disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append("chart", selectedFile);
+        formData.append("symbol", symbolEl.value);
+        formData.append("timeframe", timeframeEl.value);
+        formData.append("tradeType", tradeTypeEl.value);
+        formData.append("extraNotes", extraNotesEl.value || "");
+
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Analysis failed");
+        }
+
+        updateResults(data);
+        addToHistory(data);
+        showToast('Analysis completed successfully!', 'success');
+
+      } catch (error) {
+        console.error("Analysis error:", error);
+        showToast(error.message || 'Failed to analyze chart', 'error');
+        resetOutputs();
+      } finally {
+        loadingOverlay.classList.add('hidden');
+        analyzeBtn.classList.remove('button-loading');
+        analyzeBtn.disabled = false;
+      }
+    }
+
+    // Update results display
+    function updateResults(data) {
+      const v = data.vision_summary || {};
+      const d = data.decision || {};
+      
+      // Trend
+      trendBox.innerHTML = v.trend_structure 
+        ? `<strong>${v.trend_structure}</strong><br>${v.trend_confidence || ''}`
+        : "-";
+      
+      // Support & Resistance
+      const sup = v.support_zone || {};
+      const resz = v.resistance_zone || {};
+      srBox.innerHTML = sup.level 
+        ? `<strong>Support:</strong> ${sup.level}<br>
+           <strong>Resistance:</strong> ${resz.level || '-'}<br>
+           <small>${sup.description || ''}</small>`
+        : "-";
+      
+      // RSI
+      const rsi = v.rsi || {};
+      rsiBox.innerHTML = rsi.approx_value
+        ? `<strong>${rsi.approx_value}</strong> ${rsi.status || ''}<br>
+           ${rsi.divergence ? '⚠️ Divergence detected' : ''}`
+        : "-";
+      
+      // MACD
+      const macd = v.macd || {};
+      macdBox.innerHTML = macd.cross
+        ? `<strong>${macd.cross}</strong> cross<br>
+           Histogram: ${macd.histogram || '-'}<br>
+           Momentum: ${macd.momentum || '-'}`
+        : "-";
+      
+      // Market Notes
+      notesBox.textContent = v.key_notes || "-";
+      
+      // Decision
+      const action = (d.action || "HOLD").toUpperCase();
+      actionBadge.className = `action-badge badge-${action.toLowerCase()}`;
+      actionBadge.innerHTML = `<i class="fas fa-${getActionIcon(action)}"></i><span>${action}</span>`;
+      actionBadge.classList.remove("hidden");
+      
+      // Detailed decision
+      decisionBox.textContent = d.reason || "-";
+      
+      // Entry & Exit
+      entryPrice.textContent = d.entry || "-";
+      stopLoss.textContent = d.sl || "-";
+      takeProfit1.textContent = d.tp1 || "-";
+      takeProfit2.textContent = d.tp2 || "-";
+      
+      // Risk
+      riskBox.innerHTML = d.probability
+        ? `<strong>Probability:</strong> ${d.probability}<br>
+           <strong>Risk/Reward:</strong> ${d.risk_reward || 'N/A'}<br>
+           <strong>Invalid if:</strong> ${d.invalid_if || '-'}`
+        : "-";
+    }
+
+    function getActionIcon(action) {
+      switch(action) {
+        case 'BUY': return 'arrow-up';
+        case 'SELL': return 'arrow-down';
+        default: return 'pause';
+      }
+    }
+
+    // History management
+    function addToHistory(data) {
+      const historyItem = {
+        id: Date.now(),
+        timestamp: new Date().toLocaleString(),
+        symbol: symbolEl.value,
+        action: data.decision?.action || 'HOLD',
+        timeframe: timeframeEl.value,
+        entry: data.decision?.entry || '-'
+      };
+      
+      analysisHistory.unshift(historyItem);
+      if (analysisHistory.length > 5) {
+        analysisHistory.pop();
+      }
+      
+      saveHistory();
+      updateHistoryDisplay();
+    }
+
+    function updateHistoryDisplay() {
+      if (analysisHistory.length === 0) {
+        historyList.innerHTML = `
+          <div class="history-item">
+            <span class="history-pair">No analysis history yet</span>
+            <span class="history-decision" style="background: var(--bg-tertiary);">-</span>
+          </div>
+        `;
+        return;
+      }
+      
+      historyList.innerHTML = analysisHistory.map(item => `
+        <div class="history-item">
+          <div>
+            <span class="history-pair">${item.symbol} (${item.timeframe})</span><br>
+            <small style="color: var(--text-secondary);">${item.timestamp}</small>
+          </div>
+          <span class="history-decision ${getDecisionClass(item.action)}">
+            ${item.action.toUpperCase()}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function getDecisionClass(action) {
+      switch(action.toLowerCase()) {
+        case 'buy': return 'badge-buy';
+        case 'sell': return 'badge-sell';
+        default: return 'badge-hold';
+      }
+    }
+
+    function saveHistory() {
+      localStorage.setItem('tradingAnalysisHistory', JSON.stringify(analysisHistory));
+    }
+
+    function loadHistory() {
+      const saved = localStorage.getItem('tradingAnalysisHistory');
+      if (saved) {
+        analysisHistory = JSON.parse(saved);
+        updateHistoryDisplay();
+      }
+    }
+
+    // Toast notifications
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} toast-icon"></i>
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // Test API connection
+    testApiBtn.onclick = async () => {
+      testStatus.textContent = '';
+      testStatus.style.color = '';
+      testApiBtn.classList.add('button-loading');
+      testApiBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/health");
+        const data = await res.json();
+        
+        if (res.ok) {
+          testStatus.innerHTML = `<i class="fas fa-check-circle" style="color: var(--success);"></i> Server connected successfully`;
+          testStatus.style.color = 'var(--success)';
+          showToast('Server connection successful', 'success');
+        } else {
+          throw new Error(data.error || 'Connection failed');
+        }
+      } catch (error) {
+        testStatus.innerHTML = `<i class="fas fa-times-circle" style="color: var(--danger);"></i> Failed to connect: ${error.message}`;
+        testStatus.style.color = 'var(--danger)';
+        showToast('Server connection failed', 'error');
+      } finally {
+        testApiBtn.classList.remove('button-loading');
+        testApiBtn.disabled = false;
+      }
+    };
+
+    // Analyze button click
+    analyzeBtn.onclick = performAnalysis;
+
+    // Initialize
+    init();
+  </script>
+</body>
+</html>
